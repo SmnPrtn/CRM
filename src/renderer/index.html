@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <title>CRM Desktop - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            color: #374151;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            padding: 32px;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .grid-cols-12 {
+            grid-template-columns: repeat(12, 1fr);
+        }
+        
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .grid-cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .col-span-3 {
+            grid-column: span 3;
+        }
+        
+        .col-span-9 {
+            grid-column: span 9;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            padding: 20px;
+        }
+        
+        .nav-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border: none;
+            background: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            text-align: left;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+            font-weight: 500;
+        }
+        
+        .nav-button:hover {
+            background-color: #f3f4f6;
+            transform: translateX(4px);
+        }
+        
+        .nav-button.active {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+            box-shadow: 0 2px 4px rgba(29, 78, 216, 0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        
+        .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .icon-blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .icon-green { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .icon-purple { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .icon-red { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .icon-yellow { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button-green {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
+        
+        .button-green:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .quick-action {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .quick-action:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .quick-action .icon {
+            margin: 0 auto 12px;
+        }
+        
+        .quick-action h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        
+        .quick-action p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .recent-activity {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            padding: 24px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .activity-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .activity-content p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 24px;
+            color: #6b7280;
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-cols-12 {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-cols-4,
+            .grid-cols-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .col-span-3,
+            .col-span-9 {
+                grid-column: span 1;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="save-indicator" id="save-indicator">
+        ✅ Erfolgreich gespeichert
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 CRM Desktop</h1>
+            <p>Willkommen zu deinem professionellen Customer Relationship Management System</p>
+        </div>
+
+        <div class="grid grid-cols-12">
+            <!-- Sidebar -->
+            <div class="col-span-3">
+                <div class="sidebar">
+                    <nav>
+                        <button class="nav-button active" onclick="navigateToPage('index')">
+                            📊 Dashboard
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('companies')">
+                            🏢 Unternehmen (<span id="companies-count">0</span>)
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('products')">
+                            📦 Produkte (<span id="products-count">0</span>)
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('invoices')">
+                            💰 Rechnungen (<span id="invoices-count">0</span>)
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('create-invoice')">
+                            ✏️ Neue Rechnung
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('search')">
+                            🔍 Suche
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('reminders')">
+                            📅 Erinnerungen (<span id="reminders-count">0</span>)
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('admin')">
+                            🛡️ Admin
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-span-9">
+                <!-- Loading State -->
+                <div id="loading-state" class="loading">
+                    🔄 Lade Dashboard-Daten...
+                </div>
+                
+                <!-- Statistics -->
+                <div class="grid grid-cols-4" style="margin-bottom: 32px;" id="statistics-section">
+                    <div class="stat-card" onclick="navigateToPage('companies')">
+                        <div>
+                            <div class="stat-label">Unternehmen</div>
+                            <div class="stat-number" id="total-companies">0</div>
+                        </div>
+                        <div class="icon icon-blue">🏢</div>
+                    </div>
+                    
+                    <div class="stat-card" onclick="navigateToPage('products')">
+                        <div>
+                            <div class="stat-label">Produkte</div>
+                            <div class="stat-number" id="total-products">0</div>
+                        </div>
+                        <div class="icon icon-green">📦</div>
+                    </div>
+                    
+                    <div class="stat-card" onclick="navigateToPage('invoices')">
+                        <div>
+                            <div class="stat-label">Offene Rechnungen</div>
+                            <div class="stat-number" id="open-invoices">0</div>
+                        </div>
+                        <div class="icon icon-purple">💰</div>
+                    </div>
+                    
+                    <div class="stat-card" onclick="navigateToPage('reminders')">
+                        <div>
+                            <div class="stat-label">Anstehende Termine</div>
+                            <div class="stat-number" id="pending-reminders">0</div>
+                        </div>
+                        <div class="icon icon-red">📅</div>
+                    </div>
+                </div>
+
+                <!-- Revenue Statistics -->
+                <div class="grid grid-cols-3" style="margin-bottom: 32px;" id="revenue-section">
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">Monatsumsatz</div>
+                            <div class="stat-number" id="monthly-revenue">€0</div>
+                        </div>
+                        <div class="icon icon-green">📈</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">Jahresumsatz</div>
+                            <div class="stat-number" id="yearly-revenue">€0</div>
+                        </div>
+                        <div class="icon icon-yellow">🏆</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">Ausstehend</div>
+                            <div class="stat-number" id="pending-revenue">€0</div>
+                        </div>
+                        <div class="icon icon-red">⚠️</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions" id="quick-actions-section">
+                    <div class="quick-action" onclick="navigateToPage('companies')">
+                        <div class="icon icon-blue">🏢</div>
+                        <h3>Neues Unternehmen</h3>
+                        <p>Kunden und Partner hinzufügen</p>
+                    </div>
+                    
+                    <div class="quick-action" onclick="navigateToPage('products')">
+                        <div class="icon icon-green">📦</div>
+                        <h3>Neues Produkt</h3>
+                        <p>Produktkatalog erweitern</p>
+                    </div>
+                    
+                    <div class="quick-action" onclick="navigateToPage('create-invoice')">
+                        <div class="icon icon-purple">💰</div>
+                        <h3>Neue Rechnung</h3>
+                        <p>Rechnung erstellen und versenden</p>
+                    </div>
+                    
+                    <div class="quick-action" onclick="navigateToPage('reminders')">
+                        <div class="icon icon-red">📅</div>
+                        <h3>Erinnerung</h3>
+                        <p>Termine und Follow-ups planen</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card" id="recent-activity-section">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #1f2937;">
+                        📋 Letzte Aktivitäten
+                    </h3>
+                    <div id="recent-activities">
+                        <div class="activity-item">
+                            <div class="activity-icon icon-blue">🏢</div>
+                            <div class="activity-content">
+                                <h4>CRM Desktop erfolgreich gestartet</h4>
+                                <p>Willkommen zu deinem neuen CRM-System</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Electron IPC Renderer
+        const { ipcRenderer } = require('electron');
+
+        // Global state
+        let crmData = {};
+        let isLoading = false;
+
+        // Navigation Function
+        function navigateToPage(page) {
+            ipcRenderer.send('navigate-to-page', page);
+        }
+
+        // Database Operations
+        async function loadCRMData() {
+            try {
+                setLoading(true);
+                const data = await ipcRenderer.invoke('db-get-all-data');
+                crmData = data;
+                return data;
+            } catch (error) {
+                console.error('Error loading CRM data:', error);
+                showErrorMessage('Fehler beim Laden der Daten: ' + error.message);
+                return {};
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const loadingEl = document.getElementById('loading-state');
+            const statisticsEl = document.getElementById('statistics-section');
+            const revenueEl = document.getElementById('revenue-section');
+            const quickActionsEl = document.getElementById('quick-actions-section');
+            const recentActivityEl = document.getElementById('recent-activity-section');
+            
+            if (loading) {
+                loadingEl.style.display = 'block';
+                statisticsEl.style.display = 'none';
+                revenueEl.style.display = 'none';
+                quickActionsEl.style.display = 'none';
+                recentActivityEl.style.display = 'none';
+            } else {
+                loadingEl.style.display = 'none';
+                statisticsEl.style.display = 'grid';
+                revenueEl.style.display = 'grid';
+                quickActionsEl.style.display = 'grid';
+                recentActivityEl.style.display = 'block';
+            }
+        }
+
+        function showErrorMessage(message) {
+            alert('❌ ' + message);
+        }
+
+        // Utility Functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Statistics Update
+        function updateStatistics() {
+            try {
+                // Basic counts
+                const companies = crmData.companies || [];
+                const products = crmData.products || [];
+                const invoices = crmData.invoices || [];
+                const reminders = crmData.reminders || [];
+
+                // Update basic counts
+                document.getElementById('total-companies').textContent = companies.length;
+                document.getElementById('total-products').textContent = products.length;
+                document.getElementById('invoices-count').textContent = invoices.length;
+                
+                // Update sidebar counts
+                document.getElementById('companies-count').textContent = companies.length;
+                document.getElementById('products-count').textContent = products.length;
+                
+                // Calculate invoice statistics
+                const openInvoices = invoices.filter(inv => ['sent', 'draft'].includes(inv.status));
+                const activeReminders = reminders.filter(rem => !rem.completed);
+                
+                document.getElementById('open-invoices').textContent = openInvoices.length;
+                document.getElementById('pending-reminders').textContent = activeReminders.length;
+                document.getElementById('reminders-count').textContent = activeReminders.length;
+
+                // Calculate revenue statistics
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                
+                const paidThisMonth = invoices.filter(inv => {
+                    const invoiceDate = new Date(inv.date);
+                    return inv.status === 'paid' && 
+                           invoiceDate.getMonth() === currentMonth && 
+                           invoiceDate.getFullYear() === currentYear;
+                });
+                
+                const paidThisYear = invoices.filter(inv => {
+                    const invoiceDate = new Date(inv.date);
+                    return inv.status === 'paid' && invoiceDate.getFullYear() === currentYear;
+                });
+                
+                const pendingInvoices = invoices.filter(inv => ['sent', 'draft'].includes(inv.status));
+                
+                const monthlyRevenue = paidThisMonth.reduce((sum, inv) => sum + parseFloat(inv.totalGross || 0), 0);
+                const yearlyRevenue = paidThisYear.reduce((sum, inv) => sum + parseFloat(inv.totalGross || 0), 0);
+                const pendingRevenue = pendingInvoices.reduce((sum, inv) => sum + parseFloat(inv.totalGross || 0), 0);
+                
+                document.getElementById('monthly-revenue').textContent = formatCurrency(monthlyRevenue);
+                document.getElementById('yearly-revenue').textContent = formatCurrency(yearlyRevenue);
+                document.getElementById('pending-revenue').textContent = formatCurrency(pendingRevenue);
+
+                // Update recent activities
+                updateRecentActivities();
+                
+            } catch (error) {
+                console.error('Error updating statistics:', error);
+            }
+        }
+
+        function updateRecentActivities() {
+            const activitiesContainer = document.getElementById('recent-activities');
+            const activities = [];
+
+            // Add recent companies
+            if (crmData.companies && crmData.companies.length > 0) {
+                const recentCompanies = crmData.companies
+                    .sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt))
+                    .slice(0, 2);
+                
+                recentCompanies.forEach(company => {
+                    activities.push({
+                        icon: '🏢',
+                        iconClass: 'icon-blue',
+                        title: `Unternehmen hinzugefügt: ${company.name}`,
+                        description: `${company.email || 'Keine E-Mail'}`
+                    });
+                });
+            }
+
+            // Add recent invoices
+            if (crmData.invoices && crmData.invoices.length > 0) {
+                const recentInvoices = crmData.invoices
+                    .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+                    .slice(0, 2);
+                
+                recentInvoices.forEach(invoice => {
+                    const company = crmData.companies?.find(c => c.id === invoice.companyId);
+                    activities.push({
+                        icon: '💰',
+                        iconClass: 'icon-purple',
+                        title: `Rechnung erstellt: ${invoice.invoiceNumber}`,
+                        description: `${company ? company.name : 'Unbekanntes Unternehmen'} - ${formatCurrency(parseFloat(invoice.totalGross || 0))}`
+                    });
+                });
+            }
+
+            // Add recent products
+            if (crmData.products && crmData.products.length > 0) {
+                const recentProducts = crmData.products
+                    .sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt))
+                    .slice(0, 1);
+                
+                recentProducts.forEach(product => {
+                    activities.push({
+                        icon: '📦',
+                        iconClass: 'icon-green',
+                        title: `Produkt hinzugefügt: ${product.name}`,
+                        description: `${formatCurrency(parseFloat(product.price || 0))} - ${product.category || 'Keine Kategorie'}`
+                    });
+                });
+            }
+
+            // If no activities, show welcome message
+            if (activities.length === 0) {
+                activitiesContainer.innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-icon icon-blue">🚀</div>
+                        <div class="activity-content">
+                            <h4>CRM Desktop erfolgreich gestartet</h4>
+                            <p>Beginne mit dem Hinzufügen von Unternehmen und Produkten</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render activities
+            activitiesContainer.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon ${activity.iconClass}">${activity.icon}</div>
+                    <div class="activity-content">
+                        <h4>${activity.title}</h4>
+                        <p>${activity.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize Dashboard
+        async function initialize() {
+            try {
+                await loadCRMData();
+                updateStatistics();
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showErrorMessage('Fehler beim Initialisieren des Dashboards: ' + error.message);
+            }
+        }
+
+        // Start initialization when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>

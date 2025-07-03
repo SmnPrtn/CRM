@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <title>CRM - Erinnerungen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            color: #374151;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .grid-cols-12 {
+            grid-template-columns: repeat(12, 1fr);
+        }
+        
+        .col-span-3 {
+            grid-column: span 3;
+        }
+        
+        .col-span-9 {
+            grid-column: span 9;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 16px;
+        }
+        
+        .nav-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .nav-button:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .nav-button.active {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        
+        .button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .button-gray {
+            background-color: #6b7280;
+        }
+        
+        .button-gray:hover {
+            background-color: #4b5563;
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card-small {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-number-small {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .stat-label-small {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background-color: #f3f4f6;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .filter-tab {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .filter-tab.active {
+            background-color: white;
+            color: #2563eb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .reminder-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .reminder-item.completed {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .reminder-item.overdue {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+        }
+        
+        .reminder-item.today {
+            background-color: #fffbeb;
+            border-color: #fed7aa;
+        }
+        
+        .reminder-item.upcoming {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        
+        .reminder-checkbox {
+            margin-top: 4px;
+            transform: scale(1.2);
+        }
+        
+        .reminder-content {
+            flex: 1;
+        }
+        
+        .reminder-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .reminder-title.completed {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+        
+        .reminder-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .reminder-notes {
+            background-color: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .reminder-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-button {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .icon-button:hover {
+            color: #2563eb;
+            background-color: #f3f4f6;
+        }
+        
+        .icon-button.delete:hover {
+            color: #dc2626;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 500px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            color: #dc2626;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-cols-12 {
+                grid-template-columns: 1fr;
+            }
+            
+            .col-span-3,
+            .col-span-9 {
+                grid-column: span 1;
+            }
+            
+            .modal-content {
+                width: 95vw;
+                max-height: 95vh;
+            }
+            
+            .stats-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="font-size: 32px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">
+                        Erinnerungen & Termine
+                    </h1>
+                    <p style="color: #6b7280;">
+                        Verwalte deine Aufgaben, Termine und Follow-ups
+                    </p>
+                </div>
+                <button class="button" onclick="showReminderModal()">
+                    ➕ Neue Erinnerung
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12">
+            <!-- Sidebar -->
+            <div class="col-span-3">
+                <div class="sidebar">
+                    <nav>
+                        <button class="nav-button" onclick="navigateToPage('index')">
+                            📊 Dashboard
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('companies')">
+                            🏢 Unternehmen
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('products')">
+                            📦 Produkte
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('invoices')">
+                            💰 Rechnungen
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('search')">
+                            🔍 Suche
+                        </button>
+                        <button class="nav-button active">
+                            📅 Erinnerungen (<span id="reminder-count">0</span>)
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('admin')">
+                            🛡️ Admin
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-span-9">
+                <!-- Error Message -->
+                <div id="error-message" class="error-message hidden"></div>
+
+                <!-- Statistics -->
+                <div class="stats-row">
+                    <div class="stat-card-small">
+                        <div class="stat-number-small" id="total-reminders">0</div>
+                        <div class="stat-label-small">Gesamt</div>
+                    </div>
+                    <div class="stat-card-small">
+                        <div class="stat-number-small" id="overdue-count" style="color: #dc2626;">0</div>
+                        <div class="stat-label-small">Überfällig</div>
+                    </div>
+                    <div class="stat-card-small">
+                        <div class="stat-number-small" id="today-count" style="color: #ea580c;">0</div>
+                        <div class="stat-label-small">Heute</div>
+                    </div>
+                    <div class="stat-card-small">
+                        <div class="stat-number-small" id="upcoming-count" style="color: #2563eb;">0</div>
+                        <div class="stat-label-small">Anstehend</div>
+                    </div>
+                    <div class="stat-card-small">
+                        <div class="stat-number-small" id="completed-count" style="color: #059669;">0</div>
+                        <div class="stat-label-small">Erledigt</div>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="card" style="padding: 0;">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="setFilter('all')" id="tab-all">
+                            Alle
+                        </button>
+                        <button class="filter-tab" onclick="setFilter('overdue')" id="tab-overdue">
+                            Überfällig
+                        </button>
+                        <button class="filter-tab" onclick="setFilter('today')" id="tab-today">
+                            Heute
+                        </button>
+                        <button class="filter-tab" onclick="setFilter('upcoming')" id="tab-upcoming">
+                            Anstehend
+                        </button>
+                        <button class="filter-tab" onclick="setFilter('completed')" id="tab-completed">
+                            Erledigt
+                        </button>
+                    </div>
+                    
+                    <div style="padding: 24px;" id="reminders-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <h3 style="font-size: 18px; color: #6b7280; margin-bottom: 8px;">
+                                Keine Erinnerungen vorhanden
+                            </h3>
+                            <p style="color: #9ca3af; margin-bottom: 16px;">
+                                Erstellen Sie Ihre erste Erinnerung, um loszulegen.
+                            </p>
+                            <button class="button" onclick="showReminderModal()">
+                                Erste Erinnerung erstellen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminder-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="modal-title">Neue Erinnerung</h3>
+            
+            <div class="form-group">
+                <label class="form-label">Unternehmen *</label>
+                <select id="company-select" class="form-input">
+                    <option value="">Unternehmen auswählen</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Titel *</label>
+                <input type="text" id="title-input" class="form-input" placeholder="z.B. Nachfassen wegen Angebot">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Datum *</label>
+                    <input type="date" id="date-input" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Uhrzeit *</label>
+                    <input type="time" id="time-input" class="form-input">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Notizen</label>
+                <textarea id="notes-input" class="form-input form-textarea" placeholder="Zusätzliche Informationen..."></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="button" onclick="saveReminder()">Speichern</button>
+                <button class="button button-gray" onclick="hideReminderModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Electron IPC Renderer
+        const { ipcRenderer } = require('electron');
+
+        // Global state
+        let crmData = {};
+        let currentFilter = 'all';
+        let editingReminder = null;
+
+        // Navigation Function
+        function navigateToPage(page) {
+            console.log('🔄 Navigiere zu:', page);
+            ipcRenderer.send('navigate-to-page', page);
+        }
+
+        // Error Management
+        function showErrorMessage(message) {
+            console.error('Error:', message);
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Database Operations
+        async function loadCRMData() {
+            try {
+                console.log('Loading CRM data...');
+                const data = await ipcRenderer.invoke('db-get-all-data');
+                crmData = data || {};
+                console.log('CRM data loaded:', crmData);
+                return data;
+            } catch (error) {
+                console.error('Error loading CRM data:', error);
+                showErrorMessage('Fehler beim Laden der Daten: ' + error.message);
+                return {};
+            }
+        }
+
+        async function saveAllData() {
+            try {
+                console.log('Saving CRM data...');
+                await ipcRenderer.invoke('db-save-all-data', crmData);
+                console.log('CRM data saved successfully');
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showErrorMessage('Fehler beim Speichern: ' + error.message);
+            }
+        }
+
+        // Filter Functions
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Update tab styling
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${filter}`).classList.add('active');
+            
+            updateRemindersList();
+        }
+
+        function updateRemindersList() {
+            const container = document.getElementById('reminders-container');
+            const reminders = crmData.reminders || [];
+            
+            if (reminders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <h3 style="font-size: 18px; color: #6b7280; margin-bottom: 8px;">
+                            Keine Erinnerungen vorhanden
+                        </h3>
+                        <p style="color: #9ca3af; margin-bottom: 16px;">
+                            Erstellen Sie Ihre erste Erinnerung, um loszulegen.
+                        </p>
+                        <button class="button" onclick="showReminderModal()">
+                            Erste Erinnerung erstellen
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display reminders (simplified for stability)
+            let html = '';
+            reminders.forEach(reminder => {
+                const company = (crmData.companies || []).find(c => c.id === reminder.companyId);
+                const companyName = company ? company.name : 'Unbekanntes Unternehmen';
+                
+                html += `
+                    <div class="reminder-item">
+                        <input type="checkbox" class="reminder-checkbox" ${reminder.completed ? 'checked' : ''} 
+                               onchange="toggleReminder(${reminder.id})">
+                        <div class="reminder-content">
+                            <div class="reminder-title ${reminder.completed ? 'completed' : ''}">
+                                ${reminder.title}
+                            </div>
+                            <div class="reminder-meta">
+                                🏢 ${companyName} • 📅 ${reminder.date} ${reminder.time}
+                            </div>
+                            ${reminder.notes ? `<div class="reminder-notes">${reminder.notes}</div>` : ''}
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="icon-button" onclick="editReminder(${reminder.id})" title="Bearbeiten">✏️</button>
+                            <button class="icon-button delete" onclick="deleteReminder(${reminder.id})" title="Löschen">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateStatistics() {
+            const reminders = crmData.reminders || [];
+            const stats = {
+                total: reminders.length,
+                overdue: 0,
+                today: 0,
+                upcoming: 0,
+                completed: reminders.filter(r => r.completed).length
+            };
+            
+            document.getElementById('total-reminders').textContent = stats.total;
+            document.getElementById('overdue-count').textContent = stats.overdue;
+            document.getElementById('today-count').textContent = stats.today;
+            document.getElementById('upcoming-count').textContent = stats.upcoming;
+            document.getElementById('completed-count').textContent = stats.completed;
+            document.getElementById('reminder-count').textContent = stats.total - stats.completed;
+        }
+
+        // Modal Functions
+        function showReminderModal() {
+            console.log('Showing reminder modal...');
+            editingReminder = null;
+            populateCompanySelect();
+            clearForm();
+            document.getElementById('reminder-modal').classList.remove('hidden');
+        }
+
+        function hideReminderModal() {
+            console.log('Hiding reminder modal...');
+            document.getElementById('reminder-modal').classList.add('hidden');
+        }
+
+        function populateCompanySelect() {
+            const select = document.getElementById('company-select');
+            select.innerHTML = '<option value="">Unternehmen auswählen</option>';
+            
+            const companies = crmData.companies || [];
+            companies.forEach(company => {
+                select.innerHTML += `<option value="${company.id}">${company.name}</option>`;
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('company-select').value = '';
+            document.getElementById('title-input').value = '';
+            document.getElementById('date-input').value = '';
+            document.getElementById('time-input').value = '';
+            document.getElementById('notes-input').value = '';
+        }
+
+        async function saveReminder() {
+            console.log('Saving reminder...');
+            
+            const companyId = document.getElementById('company-select').value;
+            const title = document.getElementById('title-input').value.trim();
+            const date = document.getElementById('date-input').value;
+            const time = document.getElementById('time-input').value;
+            const notes = document.getElementById('notes-input').value.trim();
+            
+            if (!companyId || !title || !date || !time) {
+                showErrorMessage('Bitte füllen Sie alle Pflichtfelder aus.');
+                return;
+            }
+            
+            try {
+                const newReminder = {
+                    id: Date.now(),
+                    companyId: parseInt(companyId),
+                    title: title,
+                    date: date,
+                    time: time,
+                    notes: notes,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+                
+                if (!crmData.reminders) crmData.reminders = [];
+                crmData.reminders.push(newReminder);
+                
+                await saveAllData();
+                hideReminderModal();
+                updateStatistics();
+                updateRemindersList();
+                
+                console.log('Reminder saved successfully');
+                
+            } catch (error) {
+                console.error('Error saving reminder:', error);
+                showErrorMessage('Fehler beim Speichern der Erinnerung: ' + error.message);
+            }
+        }
+
+        function editReminder(reminderId) {
+            console.log('Editing reminder:', reminderId);
+            // Simplified for now - just show message
+            showErrorMessage('Bearbeiten-Funktion noch nicht implementiert.');
+        }
+
+        async function deleteReminder(reminderId) {
+            if (confirm('Möchten Sie diese Erinnerung wirklich löschen?')) {
+                try {
+                    crmData.reminders = (crmData.reminders || []).filter(r => r.id !== reminderId);
+                    await saveAllData();
+                    updateStatistics();
+                    updateRemindersList();
+                    console.log('Reminder deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting reminder:', error);
+                    showErrorMessage('Fehler beim Löschen der Erinnerung: ' + error.message);
+                }
+            }
+        }
+
+        async function toggleReminder(reminderId) {
+            try {
+                const reminder = (crmData.reminders || []).find(r => r.id === reminderId);
+                if (reminder) {
+                    reminder.completed = !reminder.completed;
+                    await saveAllData();
+                    updateStatistics();
+                    updateRemindersList();
+                    console.log('Reminder toggled successfully');
+                }
+            } catch (error) {
+                console.error('Error toggling reminder:', error);
+                showErrorMessage('Fehler beim Aktualisieren der Erinnerung: ' + error.message);
+            }
+        }
+
+        // Initialize
+        async function init() {
+            try {
+                console.log('Initializing reminders page...');
+                await loadCRMData();
+                
+                // Set default date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('date-input').value = today;
+                
+                // Set default time to current hour + 1
+                const now = new Date();
+                now.setHours(now.getHours() + 1);
+                const timeString = now.toTimeString().slice(0, 5);
+                document.getElementById('time-input').value = timeString;
+                
+                updateStatistics();
+                updateRemindersList();
+                
+                console.log('Reminders page initialized successfully');
+                
+            } catch (error) {
+                console.error('Error initializing reminders:', error);
+                showErrorMessage('Fehler beim Initialisieren: ' + error.message);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('reminder-modal').addEventListener('click', function(e) {
+            if (e.target === this) hideReminderModal();
+        });
+
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <title>CRM - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            color: #374151;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .admin-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .admin-icon {
+            font-size: 32px;
+        }
+        
+        .admin-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #92400e;
+        }
+        
+        .warning-box {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .warning-title {
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .warning-text {
+            color: #92400e;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .grid-cols-12 {
+            grid-template-columns: repeat(12, 1fr);
+        }
+        
+        .col-span-3 {
+            grid-column: span 3;
+        }
+        
+        .col-span-9 {
+            grid-column: span 9;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 16px;
+        }
+        
+        .nav-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        
+        .nav-button:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .nav-button.active {
+            background-color: #fbbf24;
+            color: #92400e;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin: 8px;
+        }
+        
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .button-green {
+            background-color: #059669;
+        }
+        
+        .button-green:hover {
+            background-color: #047857;
+        }
+        
+        .button-orange {
+            background-color: #ea580c;
+        }
+        
+        .button-orange:hover {
+            background-color: #c2410c;
+        }
+        
+        .button-red {
+            background-color: #dc2626;
+        }
+        
+        .button-red:hover {
+            background-color: #b91c1c;
+        }
+        
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+        
+        .info-box {
+            background-color: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .info-title {
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .info-text {
+            color: #1e40af;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-cols-12 {
+                grid-template-columns: 1fr;
+            }
+            
+            .col-span-3,
+            .col-span-9 {
+                grid-column: span 1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="admin-header">
+                <div class="admin-icon">🛡️</div>
+                <div>
+                    <div class="admin-title">Admin Control Panel</div>
+                    <div style="color: #6b7280; margin-top: 4px;">
+                        Einfache Systemverwaltung
+                    </div>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <div class="warning-title">⚠️ Administratorbereich</div>
+                <div class="warning-text">
+                    Dies ist eine vereinfachte Admin-Version. 
+                    Alle Funktionen sind für maximale Stabilität optimiert.
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12">
+            <!-- Sidebar -->
+            <div class="col-span-3">
+                <div class="sidebar">
+                    <nav>
+                        <button class="nav-button" onclick="navigateToPage('index')">
+                            📊 Dashboard
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('companies')">
+                            🏢 Unternehmen
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('products')">
+                            📦 Produkte
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('invoices')">
+                            💰 Rechnungen
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('search')">
+                            🔍 Suche
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('reminders')">
+                            📅 Erinnerungen (<span id="reminder-count">0</span>)
+                        </button>
+                        <button class="nav-button active">
+                            🛡️ Admin
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-span-9">
+                <!-- System Stats -->
+                <div class="section">
+                    <h3 class="section-title">📊 System-Übersicht</h3>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">✅</div>
+                            <div class="stat-label">System Online</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">🗄️</div>
+                            <div class="stat-label">SQLite Datenbank</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">🔒</div>
+                            <div class="stat-label">Sicher</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="section">
+                    <h3 class="section-title">🚀 Quick Navigation</h3>
+                    
+                    <div class="info-box">
+                        <div class="info-title">💡 Tipp</div>
+                        <div class="info-text">
+                            Verwenden Sie die Sidebar-Navigation, um zu verschiedenen Bereichen zu gelangen.
+                            Alle wichtigen CRM-Funktionen sind über die Hauptnavigation verfügbar.
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="button" onclick="navigateToPage('index')">
+                            📊 Zum Dashboard
+                        </button>
+                        <button class="button button-green" onclick="navigateToPage('companies')">
+                            🏢 Unternehmen verwalten
+                        </button>
+                        <button class="button button-orange" onclick="navigateToPage('products')">
+                            📦 Produkte verwalten
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Info -->
+                <div class="section">
+                    <h3 class="section-title">ℹ️ System-Information</h3>
+                    
+                    <div class="card">
+                        <h4 style="margin-bottom: 12px; color: #374151;">🖥️ Anwendung</h4>
+                        <p style="margin-bottom: 8px;"><strong>Version:</strong> Electron Desktop CRM</p>
+                        <p style="margin-bottom: 8px;"><strong>Datenbank:</strong> SQLite</p>
+                        <p style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: #059669;">✅ Online</span></p>
+                        <p style="margin-bottom: 16px;"><strong>Letzter Start:</strong> <span id="start-time">Wird geladen...</span></p>
+                        
+                        <h4 style="margin-bottom: 12px; color: #374151;">🔧 Verfügbare Module</h4>
+                        <ul style="margin-left: 20px; color: #6b7280;">
+                            <li>✅ Dashboard - Übersicht und Statistiken</li>
+                            <li>✅ Unternehmen - Kunden- und Kontaktverwaltung</li>
+                            <li>✅ Produkte - Produktkatalog</li>
+                            <li>✅ Rechnungen - Rechnungsstellung</li>
+                            <li>✅ Erinnerungen - Termin- und Aufgabenmanagement</li>
+                            <li>✅ Suche - Globale Datensuche</li>
+                            <li>✅ Admin - Systemverwaltung</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="section">
+                    <h3 class="section-title">❓ Hilfe & Support</h3>
+                    
+                    <div class="card">
+                        <h4 style="margin-bottom: 12px; color: #374151;">📚 Erste Schritte</h4>
+                        <ol style="margin-left: 20px; color: #6b7280; line-height: 1.6;">
+                            <li>Beginnen Sie mit dem <strong>Dashboard</strong> für eine Übersicht</li>
+                            <li>Erstellen Sie <strong>Unternehmen</strong> und fügen Sie Kontakte hinzu</li>
+                            <li>Definieren Sie <strong>Produkte</strong> in Ihrem Katalog</li>
+                            <li>Erstellen Sie Ihre ersten <strong>Rechnungen</strong></li>
+                            <li>Verwenden Sie <strong>Erinnerungen</strong> für Follow-ups</li>
+                            <li>Nutzen Sie die <strong>Suche</strong> zum schnellen Finden</li>
+                        </ol>
+                        
+                        <div style="margin-top: 16px; padding: 12px; background-color: #f3f4f6; border-radius: 6px;">
+                            <p style="color: #374151; font-size: 14px;">
+                                <strong>💡 Tipp:</strong> Alle Daten werden automatisch in der SQLite-Datenbank gespeichert.
+                                Sie können sicher zwischen den Bereichen navigieren.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Electron IPC Renderer
+        const { ipcRenderer } = require('electron');
+
+        // Navigation Function
+        function navigateToPage(page) {
+            console.log('🔄 Navigiere zu:', page);
+            ipcRenderer.send('navigate-to-page', page);
+        }
+
+        // Simple initialization
+        function init() {
+            console.log('Simple Admin page loaded');
+            
+            // Set start time
+            document.getElementById('start-time').textContent = new Date().toLocaleString('de-DE');
+            
+            // Set reminder count
+            document.getElementById('reminder-count').textContent = '0';
+            
+            console.log('Simple Admin initialized successfully');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

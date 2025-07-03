@@ -1,0 +1,16 @@
+{
+  "name": "crm-desktop",
+  "version": "1.0.0",
+  "description": "Professionelles CRM Desktop-System",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  }
+}

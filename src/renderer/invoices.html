@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <title>CRM - Rechnungen</title>
+    <!-- jsPDF Library für PDF-Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            color: #374151;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .grid-cols-12 {
+            grid-template-columns: repeat(12, 1fr);
+        }
+        
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .col-span-3 {
+            grid-column: span 3;
+        }
+        
+        .col-span-9 {
+            grid-column: span 9;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 16px;
+        }
+        
+        .nav-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .nav-button:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .nav-button.active {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .icon-blue { background-color: #2563eb; }
+        .icon-green { background-color: #059669; }
+        .icon-purple { background-color: #7c3aed; }
+        .icon-red { background-color: #dc2626; }
+        .icon-yellow { background-color: #d97706; }
+        
+        .button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .button-green {
+            background-color: #059669;
+        }
+        
+        .button-green:hover {
+            background-color: #047857;
+        }
+        
+        .button-gray {
+            background-color: #6b7280;
+        }
+        
+        .button-gray:hover {
+            background-color: #4b5563;
+        }
+        
+        .button-red {
+            background-color: #dc2626;
+        }
+        
+        .button-red:hover {
+            background-color: #b91c1c;
+        }
+        
+        .invoice-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .invoice-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .invoice-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .invoice-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #059669;
+        }
+        
+        .invoice-company {
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        
+        .invoice-contact {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .invoice-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .invoice-date {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .invoice-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-draft {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .status-sent {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-paid {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-overdue {
+            background-color: #fecaca;
+            color: #dc2626;
+        }
+        
+        .status-cancelled {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .icon-button {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .icon-button:hover {
+            color: #2563eb;
+            background-color: #f3f4f6;
+        }
+        
+        .icon-button.delete:hover {
+            color: #dc2626;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 16px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .filter-select {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .date-input {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 800px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .invoice-detail {
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .invoice-detail:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .detail-value {
+            color: #6b7280;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        
+        .items-table th,
+        .items-table td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .items-table th {
+            background-color: #f9fafb;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .items-table td {
+            color: #6b7280;
+        }
+        
+        .total-row {
+            font-weight: 600;
+            color: #1f2937;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        /* Tab System */
+        .tab-navigation {
+            display: flex;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            padding: 4px;
+        }
+        
+        .tab-button {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            background-color: white;
+            color: #2563eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .tab-button:hover:not(.active) {
+            color: #374151;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Admin Settings Styles */
+        .settings-section {
+            margin-bottom: 32px;
+        }
+        
+        .settings-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toggle-checkbox {
+            width: 44px;
+            height: 24px;
+            background-color: #d1d5db;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .toggle-checkbox.active {
+            background-color: #2563eb;
+        }
+        
+        .toggle-checkbox::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-checkbox.active::after {
+            left: 22px;
+        }
+        
+        .preview-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .preview-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .preview-content {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        
+        .success-message {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #047857;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 24px;
+            color: #6b7280;
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-cols-12 {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-cols-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .col-span-3,
+            .col-span-9 {
+                grid-column: span 1;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .date-range {
+                flex-direction: column;
+            }
+            
+            .invoice-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .invoice-meta {
+                flex-wrap: wrap;
+            }
+            
+            .items-table {
+                font-size: 14px;
+            }
+            
+            .items-table th,
+            .items-table td {
+                padding: 8px 4px;
+            }
+            
+            .form-row,
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="save-indicator" id="save-indicator">
+        ✅ Erfolgreich gespeichert
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="font-size: 32px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">
+                        Rechnungen
+                    </h1>
+                    <p style="color: #6b7280;">
+                        Verwalte und verfolge alle deine Rechnungen mit PDF-Export
+                    </p>
+                </div>
+                <button class="button" onclick="createNewInvoice()">
+                    ➕ Neue Rechnung
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12">
+            <!-- Sidebar -->
+            <div class="col-span-3">
+                <div class="sidebar">
+                    <nav>
+                        <button class="nav-button" onclick="navigateToPage('index')">
+                            📊 Dashboard
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('companies')">
+                            🏢 Unternehmen
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('products')">
+                            📦 Produkte
+                        </button>
+                        <button class="nav-button active" onclick="navigateToPage('invoices')">
+                            💰 Rechnungen
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('create-invoice')">
+                            ✏️ Neue Rechnung
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('search')">
+                            🔍 Suche
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('reminders')">
+                            📅 Erinnerungen (<span id="reminder-count">0</span>)
+                        </button>
+                        <button class="nav-button" onclick="navigateToPage('admin')">
+                            🛡️ Admin
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-span-9">
+                <!-- Loading State -->
+                <div id="loading-state" class="loading">
+                    🔄 Lade Rechnungen...
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="tab-navigation" id="tab-navigation" style="display: none;">
+                    <button class="tab-button active" onclick="switchTab('overview')">
+                        📊 Übersicht
+                    </button>
+                    <button class="tab-button" onclick="switchTab('settings')">
+                        ⚙️ Einstellungen
+                    </button>
+                </div>
+
+                <!-- Tab Content: Overview -->
+                <div id="overview-tab" class="tab-content active">
+                    <!-- Success Message -->
+                    <div id="success-message" class="success-message">
+                        ✅ PDF erfolgreich erstellt!
+                    </div>
+                    
+                    <!-- Statistics -->
+                    <div class="grid grid-cols-4" style="margin-bottom: 24px;" id="statistics-section">
+                        <div class="stat-card">
+                            <div>
+                                <div class="stat-label">Offene Rechnungen</div>
+                                <div class="stat-number" id="open-invoices-count">0</div>
+                            </div>
+                            <div class="icon icon-blue">💰</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div>
+                                <div class="stat-label">Überfällige</div>
+                                <div class="stat-number" id="overdue-invoices-count">0</div>
+                            </div>
+                            <div class="icon icon-red">⚠️</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div>
+                                <div class="stat-label">Monatsumsatz</div>
+                                <div class="stat-number" id="monthly-revenue">€0</div>
+                            </div>
+                            <div class="icon icon-green">📈</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div>
+                                <div class="stat-label">Jahresumsatz</div>
+                                <div class="stat-number" id="yearly-revenue">€0</div>
+                            </div>
+                            <div class="icon icon-purple">🏆</div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="card" style="margin-bottom: 24px;" id="filters-section">
+                        <div class="filters">
+                            <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechnungen durchsuchen...">
+                            
+                            <select id="status-filter" class="filter-select">
+                                <option value="">Alle Status</option>
+                                <option value="draft">Entwurf</option>
+                                <option value="sent">Versendet</option>
+                                <option value="paid">Bezahlt</option>
+                                <option value="overdue">Überfällig</option>
+                                <option value="cancelled">Storniert</option>
+                            </select>
+                            
+                            <select id="company-filter" class="filter-select">
+                                <option value="">Alle Unternehmen</option>
+                            </select>
+                            
+                            <div class="date-range">
+                                <input type="date" id="date-from" class="date-input">
+                                <span style="color: #6b7280;">bis</span>
+                                <input type="date" id="date-to" class="date-input">
+                            </div>
+                            
+                            <select id="sort-filter" class="filter-select">
+                                <option value="date-desc">Neueste zuerst</option>
+                                <option value="date-asc">Älteste zuerst</option>
+                                <option value="amount-desc">Höchster Betrag</option>
+                                <option value="amount-asc">Niedrigster Betrag</option>
+                                <option value="company-asc">Unternehmen A-Z</option>
+                                <option value="status-asc">Nach Status</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Invoices List -->
+                    <div class="card" id="invoices-section">
+                        <div id="invoices-container">
+                            <!-- Invoices will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Settings -->
+                <div id="settings-tab" class="tab-content">
+                    <!-- Company Information -->
+                    <div class="card settings-section">
+                        <div class="settings-title">🏢 Firmendaten</div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Firmenname *</label>
+                                <input type="text" id="company-name" class="form-input" placeholder="Ihre Firma GmbH">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Steuernummer</label>
+                                <input type="text" id="tax-number" class="form-input" placeholder="ATU12345678">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Adresse *</label>
+                            <textarea id="company-address" class="form-input form-textarea" placeholder="Musterstraße 123&#10;1234 Wien"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Telefon *</label>
+                                <input type="text" id="company-phone" class="form-input" placeholder="+43 1 234567">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">E-Mail *</label>
+                                <input type="email" id="company-email" class="form-input" placeholder="office@ihrefirma.at">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Website</label>
+                            <input type="text" id="company-website" class="form-input" placeholder="www.ihrefirma.at">
+                        </div>
+                        
+                        <div class="preview-box" id="company-preview">
+                            <div class="preview-title">Firmen-Vorschau:</div>
+                            <div class="preview-content" id="company-preview-content">
+                                Firmendaten werden hier angezeigt...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Settings -->
+                    <div class="card settings-section">
+                        <div class="settings-title">📋 Rechnungseinstellungen</div>
+                        
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label class="form-label">Rechnungspräfix</label>
+                                <input type="text" id="invoice-prefix" class="form-input" placeholder="R-" maxlength="10">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Nächste Nummer</label>
+                                <input type="number" id="next-invoice-number" class="form-input" min="1" placeholder="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Zahlungsfrist (Tage)</label>
+                                <input type="number" id="payment-terms" class="form-input" min="1" max="365" placeholder="30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Standard-Zahlungstext</label>
+                            <textarea id="default-payment-text" class="form-input form-textarea" placeholder="Zahlung binnen 30 Tagen ohne Abzug."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Bank Information -->
+                    <div class="card settings-section">
+                        <div class="settings-title">💳 Bankverbindung</div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Bankname</label>
+                                <input type="text" id="bank-name" class="form-input" placeholder="Ihre Bank">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Kontoinhaber</label>
+                                <input type="text" id="account-holder" class="form-input" placeholder="Ihre Firma GmbH">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">IBAN *</label>
+                                <input type="text" id="iban" class="form-input" placeholder="AT12 3456 7890 1234 5678">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">BIC</label>
+                                <input type="text" id="bic" class="form-input" placeholder="ABCDEFGHIJK">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Settings -->
+                    <div class="card settings-section">
+                        <div class="settings-title">📄 Rechnungs-Footer</div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Footer-Format</label>
+                            <select id="footer-format" class="form-input">
+                                <option value="single-line">Eine Zeile (kompakt)</option>
+                                <option value="multi-line">Mehrzeilig (übersichtlich)</option>
+                                <option value="custom">Benutzerdefiniert</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group hidden" id="custom-footer-group">
+                            <label class="form-label">Benutzerdefinierter Footer-Text</label>
+                            <textarea id="custom-footer-text" class="form-input form-textarea" placeholder="Verwenden Sie Platzhalter: {company_name}, {bank_name}, {iban}, {bic}, {tax_number}"></textarea>
+                        </div>
+                        
+                        <div class="toggle-switch">
+                            <div class="toggle-checkbox" id="qr-code-toggle" onclick="toggleQRCode()"></div>
+                            <label>QR-Code aktivieren</label>
+                        </div>
+                        
+                        <div class="preview-box" id="footer-preview">
+                            <div class="preview-title">Footer-Vorschau:</div>
+                            <div class="preview-content" id="footer-preview-content">
+                                Footer wird hier angezeigt...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="card" style="text-align: center;">
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button class="button button-green" onclick="saveInvoiceSettings()">
+                                💾 Einstellungen speichern
+                            </button>
+                            <button class="button button-gray" onclick="resetToDefaults()">
+                                🔄 Zurücksetzen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Detail Modal -->
+    <div id="invoice-detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 class="modal-title" id="invoice-detail-title">Rechnungsdetails</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button class="button" onclick="editInvoice()" id="edit-invoice-btn">
+                        ✏️ Bearbeiten
+                    </button>
+                    <button class="button button-green" onclick="downloadInvoicePDF()" id="download-pdf-btn">
+                        📄 PDF downloaden
+                    </button>
+                    <button class="button button-gray" onclick="hideInvoiceDetailModal()">
+                        ✕ Schließen
+                    </button>
+                </div>
+            </div>
+            
+            <div id="invoice-detail-content">
+                <!-- Invoice details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Electron IPC Renderer
+        const { ipcRenderer } = require('electron');
+
+        // Global state
+        let crmData = {};
+        let filteredInvoices = [];
+        let selectedInvoice = null;
+        let currentTab = 'overview';
+        let isLoading = false;
+
+        // Navigation Function
+        function navigateToPage(page) {
+            ipcRenderer.send('navigate-to-page', page);
+        }
+
+        // Tab Management
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Initialize tab-specific content
+            if (tabName === 'settings') {
+                loadInvoiceSettings();
+            }
+        }
+
+        // Database Operations
+        async function loadCRMData() {
+            try {
+                setLoading(true);
+                const data = await ipcRenderer.invoke('db-get-all-data');
+                crmData = data;
+                return data;
+            } catch (error) {
+                console.error('Error loading CRM data:', error);
+                showErrorMessage('Fehler beim Laden der Daten: ' + error.message);
+                return {};
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function saveCRMData() {
+            try {
+                await ipcRenderer.invoke('db-save-all-data', crmData);
+                showSaveIndicator();
+                return true;
+            } catch (error) {
+                console.error('Error saving CRM data:', error);
+                showErrorMessage('Fehler beim Speichern: ' + error.message);
+                return false;
+            }
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const loadingEl = document.getElementById('loading-state');
+            const tabNavEl = document.getElementById('tab-navigation');
+            
+            if (loading) {
+                loadingEl.classList.remove('hidden');
+                tabNavEl.style.display = 'none';
+            } else {
+                loadingEl.classList.add('hidden');
+                tabNavEl.style.display = 'flex';
+            }
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('save-indicator');
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        function showSuccessMessage(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function showErrorMessage(message) {
+            alert('❌ ' + message);
+        }
+
+        // Utility Functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2
+            }).format(amount);
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('de-DE');
+        }
+        
+        function formatNumber(amount) {
+            return new Intl.NumberFormat('de-DE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Invoice Settings Management
+        function loadInvoiceSettings() {
+            const settings = crmData.invoiceSettings || {};
+            const companyInfo = settings.companyInfo || {};
+            const bankInfo = settings.bankInfo || {};
+            
+            // Company Info
+            document.getElementById('company-name').value = companyInfo.name || '';
+            document.getElementById('tax-number').value = companyInfo.taxNumber || '';
+            document.getElementById('company-address').value = companyInfo.address || '';
+            document.getElementById('company-phone').value = companyInfo.phone || '';
+            document.getElementById('company-email').value = companyInfo.email || '';
+            document.getElementById('company-website').value = companyInfo.website || '';
+            
+            // Invoice Settings
+            document.getElementById('invoice-prefix').value = settings.invoiceNumberPrefix || 'R-';
+            document.getElementById('next-invoice-number').value = settings.nextInvoiceNumber || 1;
+            document.getElementById('payment-terms').value = settings.defaultPaymentTerms || 30;
+            document.getElementById('default-payment-text').value = settings.defaultPaymentText || 'Zahlung binnen 30 Tagen ohne Abzug.';
+            
+            // Bank Info
+            document.getElementById('bank-name').value = bankInfo.bankName || '';
+            document.getElementById('account-holder').value = bankInfo.accountHolder || '';
+            document.getElementById('iban').value = bankInfo.iban || '';
+            document.getElementById('bic').value = bankInfo.bic || '';
+            
+            // Footer Settings
+            document.getElementById('footer-format').value = settings.footerFormat || 'single-line';
+            document.getElementById('custom-footer-text').value = settings.customFooterText || '';
+            
+            const qrToggle = document.getElementById('qr-code-toggle');
+            if (settings.enableQRCode) {
+                qrToggle.classList.add('active');
+            }
+            
+            // Update visibility
+            updateCustomFooterVisibility();
+            updateCompanyPreview();
+            updateFooterPreview();
+            
+            // Add event listeners
+            addSettingsEventListeners();
+        }
+
+        function addSettingsEventListeners() {
+            const companyFields = ['company-name', 'tax-number', 'company-address', 'company-phone', 'company-email', 'company-website'];
+            companyFields.forEach(field => {
+                document.getElementById(field).addEventListener('input', updateCompanyPreview);
+            });
+            
+            const footerFields = ['footer-format', 'custom-footer-text'];
+            footerFields.forEach(field => {
+                document.getElementById(field).addEventListener('change', updateFooterPreview);
+            });
+            
+            document.getElementById('footer-format').addEventListener('change', updateCustomFooterVisibility);
+        }
+
+        function updateCustomFooterVisibility() {
+            const format = document.getElementById('footer-format').value;
+            const customGroup = document.getElementById('custom-footer-group');
+            
+            if (format === 'custom') {
+                customGroup.classList.remove('hidden');
+            } else {
+                customGroup.classList.add('hidden');
+            }
+            
+            updateFooterPreview();
+        }
+
+        function updateCompanyPreview() {
+            const name = document.getElementById('company-name').value;
+            const address = document.getElementById('company-address').value;
+            const phone = document.getElementById('company-phone').value;
+            const email = document.getElementById('company-email').value;
+            const website = document.getElementById('company-website').value;
+            const taxNumber = document.getElementById('tax-number').value;
+            
+            const preview = document.getElementById('company-preview-content');
+            
+            if (!name && !address && !phone && !email) {
+                preview.innerHTML = 'Firmendaten werden hier angezeigt...';
+                return;
+            }
+            
+            let content = '';
+            if (name) content += `<strong>${name}</strong><br>`;
+            if (address) content += `${address.replace(/\n/g, '<br>')}<br>`;
+            if (phone) content += `Tel: ${phone}<br>`;
+            if (email) content += `E-Mail: ${email}<br>`;
+            if (website) content += `Web: ${website}<br>`;
+            if (taxNumber) content += `${taxNumber}`;
+            
+            preview.innerHTML = content;
+        }
+
+        function updateFooterPreview() {
+            const format = document.getElementById('footer-format').value;
+            const customText = document.getElementById('custom-footer-text').value;
+            const preview = document.getElementById('footer-preview-content');
+            
+            const company = document.getElementById('company-name').value || 'Ihre Firma';
+            const bank = document.getElementById('bank-name').value || 'Ihre Bank';
+            const iban = document.getElementById('iban').value || 'AT12 3456 7890 1234 5678';
+            const bic = document.getElementById('bic').value || 'ABCDEFGHIJK';
+            const taxNumber = document.getElementById('tax-number').value || 'ATU12345678';
+            
+            let footer = '';
+            
+            switch(format) {
+                case 'single-line':
+                    footer = `${company} | ${bank} | IBAN: ${iban} | BIC: ${bic} | ${taxNumber}`;
+                    break;
+                case 'multi-line':
+                    footer = `${company}<br>Bankverbindung: ${bank}<br>IBAN: ${iban} | BIC: ${bic}<br>${taxNumber}`;
+                    break;
+                case 'custom':
+                    footer = customText
+                        .replace('{company_name}', company)
+                        .replace('{bank_name}', bank)
+                        .replace('{iban}', iban)
+                        .replace('{bic}', bic)
+                        .replace('{tax_number}', taxNumber);
+                    break;
+            }
+            
+            preview.innerHTML = footer || 'Footer wird hier angezeigt...';
+        }
+
+        function toggleQRCode() {
+            const toggle = document.getElementById('qr-code-toggle');
+            toggle.classList.toggle('active');
+        }
+
+        async function saveInvoiceSettings() {
+            try {
+                const settings = {
+                    companyInfo: {
+                        name: document.getElementById('company-name').value,
+                        taxNumber: document.getElementById('tax-number').value,
+                        address: document.getElementById('company-address').value,
+                        phone: document.getElementById('company-phone').value,
+                        email: document.getElementById('company-email').value,
+                        website: document.getElementById('company-website').value
+                    },
+                    invoiceNumberPrefix: document.getElementById('invoice-prefix').value,
+                    nextInvoiceNumber: parseInt(document.getElementById('next-invoice-number').value) || 1,
+                    defaultPaymentTerms: parseInt(document.getElementById('payment-terms').value) || 30,
+                    defaultPaymentText: document.getElementById('default-payment-text').value,
+                    bankInfo: {
+                        bankName: document.getElementById('bank-name').value,
+                        accountHolder: document.getElementById('account-holder').value,
+                        iban: document.getElementById('iban').value,
+                        bic: document.getElementById('bic').value
+                    },
+                    footerFormat: document.getElementById('footer-format').value,
+                    customFooterText: document.getElementById('custom-footer-text').value,
+                    enableQRCode: document.getElementById('qr-code-toggle').classList.contains('active')
+                };
+                
+                crmData.invoiceSettings = settings;
+                await saveCRMData();
+                showSuccessMessage('✅ Rechnungseinstellungen erfolgreich gespeichert!');
+                
+            } catch (error) {
+                showErrorMessage('Fehler beim Speichern der Einstellungen: ' + error.message);
+            }
+        }
+
+        function resetToDefaults() {
+            if (confirm('Möchten Sie alle Einstellungen auf die Standardwerte zurücksetzen?')) {
+                // Reset form fields
+                document.getElementById('company-name').value = '';
+                document.getElementById('tax-number').value = '';
+                document.getElementById('company-address').value = '';
+                document.getElementById('company-phone').value = '';
+                document.getElementById('company-email').value = '';
+                document.getElementById('company-website').value = '';
+                
+                document.getElementById('invoice-prefix').value = 'R-';
+                document.getElementById('next-invoice-number').value = 1;
+                document.getElementById('payment-terms').value = 30;
+                document.getElementById('default-payment-text').value = 'Zahlung binnen 30 Tagen ohne Abzug.';
+                
+                document.getElementById('bank-name').value = '';
+                document.getElementById('account-holder').value = '';
+                document.getElementById('iban').value = '';
+                document.getElementById('bic').value = '';
+                
+                document.getElementById('footer-format').value = 'single-line';
+                document.getElementById('custom-footer-text').value = '';
+                
+                const qrToggle = document.getElementById('qr-code-toggle');
+                qrToggle.classList.remove('active');
+                
+                updateCustomFooterVisibility();
+                updateCompanyPreview();
+                updateFooterPreview();
+            }
+        }
+
+        // Professional PDF Export Functions
+        function generateInvoicePDF(invoice) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                const company = crmData.companies?.find(c => c.id === invoice.companyId);
+                const contact = company && invoice.contactId ? 
+                    company.contacts?.find(c => c.id === invoice.contactId) : null;
+                
+                const companyInfo = crmData.invoiceSettings?.companyInfo || {};
+                const bankInfo = crmData.invoiceSettings?.bankInfo || {};
+                
+                // Set font
+                doc.setFont('helvetica');
+                
+                // Header - Company Info
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text(companyInfo.name || 'Ihr Unternehmen', 20, 30);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                const companyLines = (companyInfo.address || 'Adresse nicht angegeben').split('\n');
+                if (companyInfo.phone) companyLines.push(`Tel. ${companyInfo.phone}`);
+                if (companyInfo.email) companyLines.push(companyInfo.email);
+                if (companyInfo.website) companyLines.push(companyInfo.website);
+                
+                let yPos = 40;
+                companyLines.forEach(line => {
+                    doc.text(line, 20, yPos);
+                    yPos += 5;
+                });
+                
+                // Invoice Number
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(37, 99, 235); // Blue color
+                doc.text(invoice.invoiceNumber, 150, 30);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Rechnungs Nr.: ${invoice.invoiceNumber.replace('R-', '')}`, 150, 40);
+                if (company && company.customerNumber) {
+                    doc.text(`Kunden Nr.: ${company.customerNumber.replace('K-', '')}`, 150, 45);
+                }
+                doc.text(`Datum: ${formatDate(invoice.date)}`, 150, 50);
+                doc.text(`Fällig: ${formatDate(invoice.dueDate)}`, 150, 55);
+                
+                // Customer Info
+                yPos = 80;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Rechnungsempfänger:', 20, yPos);
+                
+                yPos += 10;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                if (company && company.customerNumber) {
+                    doc.text(`Kundennummer: ${company.customerNumber}`, 20, yPos);
+                    yPos += 8;
+                }
+                
+                if (company) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(company.name, 20, yPos);
+                    yPos += 5;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    if (company.address) {
+                        const addressLines = company.address.split('\n');
+                        addressLines.forEach(line => {
+                            doc.text(line, 20, yPos);
+                            yPos += 5;
+                        });
+                    }
+                    
+                    if (contact) {
+                        yPos += 3;
+                        doc.text(`Ansprechpartner: ${contact.name}`, 20, yPos);
+                        if (contact.position) {
+                            doc.text(` (${contact.position})`, 20 + doc.getTextWidth(`Ansprechpartner: ${contact.name}`), yPos);
+                        }
+                        yPos += 5;
+                    }
+                }
+                
+                // Greeting
+                yPos += 10;
+                doc.text(contact ? `Sehr geehrte${contact.name.includes(' ') ? 'r' : ''} ${contact.name.split(' ')[0]},` : 'Sehr geehrte Damen und Herren,', 20, yPos);
+                yPos += 8;
+                doc.text('wir bedanken uns für den Auftrag und erlauben uns, die nachfolgenden', 20, yPos);
+                yPos += 5;
+                doc.text('Leistungen in Rechnung zu stellen.', 20, yPos);
+                
+                // Table Header
+                yPos += 15;
+                
+                // Professional table headers with proper spacing
+                doc.setFillColor(248, 250, 252);
+                doc.rect(20, yPos - 5, 170, 10, 'F');
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.text('Pos.', 22, yPos);
+                doc.text('Beschreibung', 35, yPos);
+                doc.text('Menge', 110, yPos);
+                doc.text('Einheit', 125, yPos);
+                doc.text('USt.', 140, yPos);
+                doc.text('Preis', 155, yPos);
+                doc.text('Summe', 175, yPos);
+                
+                yPos += 10;
+                
+                // Table items with enhanced formatting
+                doc.setFont('helvetica', 'normal');
+                invoice.items.forEach((item, index) => {
+                    doc.text((index + 1).toString(), 22, yPos);
+                    
+                    // Product name - bold and truncated if too long
+                    doc.setFont('helvetica', 'bold');
+                    const maxProductNameLength = 25;
+                    const productName = item.productName.length > maxProductNameLength ? 
+                        item.productName.substring(0, maxProductNameLength) + '...' : item.productName;
+                    doc.text(productName, 35, yPos);
+                    
+                    // Description - smaller font and gray color
+                    if (item.description) {
+                        doc.setFontSize(8);
+                        doc.setTextColor(107, 114, 128);
+                        doc.setFont('helvetica', 'normal');
+                        const maxDescLength = 35;
+                        const description = item.description.length > maxDescLength ? 
+                            item.description.substring(0, maxDescLength) + '...' : item.description;
+                        doc.text(description, 35, yPos + 3);
+                        doc.setFontSize(9);
+                        doc.setTextColor(0, 0, 0);
+                    }
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(formatNumber(item.quantity), 115, yPos, { align: 'right' });
+                    doc.text(item.unit || 'Stk.', 127, yPos, { align: 'center' });
+                    doc.text(`${item.vatRate}%`, 145, yPos, { align: 'right' });
+                    doc.text(formatNumber(parseFloat(item.unitPrice)), 165, yPos, { align: 'right' });
+                    doc.text(formatNumber(parseFloat(item.totalPrice)), 185, yPos, { align: 'right' });
+                    
+                    yPos += item.description ? 12 : 8;
+                });
+                
+                // Enhanced totals section
+                yPos += 10;
+                const totalsX = 130;
+                const totalsValueX = 185;
+                
+                // Subtotal
+                doc.setFont('helvetica', 'normal');
+                doc.text('Nettosumme:', totalsX, yPos);
+                doc.text(formatNumber(parseFloat(invoice.totalNet)), totalsValueX, yPos, { align: 'right' });
+                
+                // VAT
+                yPos += 6;
+                doc.text(`${invoice.vatRate}% USt.:`, totalsX, yPos);
+                doc.text(formatNumber(parseFloat(invoice.totalVat)), totalsValueX, yPos, { align: 'right' });
+                
+                // Total with enhanced styling
+                yPos += 8;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.text('Gesamtsumme:', totalsX, yPos);
+                doc.text(`€ ${formatNumber(parseFloat(invoice.totalGross))}`, totalsValueX, yPos, { align: 'right' });
+                
+                // Payment Terms in styled box
+                if (invoice.paymentTerms) {
+                    yPos += 15;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    
+                    // Create a styled box for payment terms
+                    const boxHeight = 20;
+                    doc.setFillColor(249, 250, 251);
+                    doc.rect(20, yPos - 5, 170, boxHeight, 'F');
+                    doc.setDrawColor(229, 231, 235);
+                    doc.rect(20, yPos - 5, 170, boxHeight, 'S');
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Zahlungsbedingungen:', 22, yPos);
+                    doc.setFont('helvetica', 'normal');
+                    yPos += 5;
+                    
+                    const paymentLines = invoice.paymentTerms.split('\n');
+                    paymentLines.forEach(line => {
+                        doc.text(line, 22, yPos);
+                        yPos += 5;
+                    });
+                }
+                
+                // Professional Footer with enhanced styling
+                const footerY = 280;
+                doc.setFontSize(8);
+                doc.setTextColor(75, 85, 99);
+                
+                // Footer separator line
+                doc.setDrawColor(229, 231, 235);
+                doc.line(20, footerY - 5, 190, footerY - 5);
+                
+                const footerText = generateFooterText();
+                doc.text(footerText, 20, footerY);
+                
+                // Enhanced QR Code section
+                if (crmData.invoiceSettings?.enableQRCode) {
+                    doc.setDrawColor(229, 231, 235);
+                    doc.rect(170, footerY - 15, 15, 15, 'S');
+                    doc.setFontSize(6);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('QR-Code', 177.5, footerY - 10, { align: 'center' });
+                    doc.text('Zahlung', 177.5, footerY - 5, { align: 'center' });
+                }
+                
+                // Save PDF with enhanced filename
+                const fileName = `Rechnung_${invoice.invoiceNumber}_${company ? company.name.replace(/[^a-zA-Z0-9]/g, '_') : 'Kunde'}_${invoice.date}.pdf`;
+                doc.save(fileName);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('PDF Generation Error:', error);
+                return false;
+            }
+        }
+
+        function generateFooterText() {
+            const company = crmData.invoiceSettings?.companyInfo || {};
+            const bank = crmData.invoiceSettings?.bankInfo || {};
+            const format = crmData.invoiceSettings?.footerFormat || 'single-line';
+            
+            switch(format) {
+                case 'single-line':
+                    return `${company.name || ''} | ${bank.bankName || ''} | IBAN: ${bank.iban || ''} | BIC: ${bank.bic || ''} | ${company.taxNumber || ''}`;
+                case 'multi-line':
+                    return `${company.name || ''}\nBankverbindung: ${bank.bankName || ''}\nIBAN: ${bank.iban || ''} | BIC: ${bank.bic || ''}\n${company.taxNumber || ''}`;
+                case 'custom':
+                    return (crmData.invoiceSettings?.customFooterText || '')
+                        .replace('{company_name}', company.name || '')
+                        .replace('{bank_name}', bank.bankName || '')
+                        .replace('{iban}', bank.iban || '')
+                        .replace('{bic}', bank.bic || '')
+                        .replace('{tax_number}', company.taxNumber || '');
+                default:
+                    return `${company.name || ''} | ${bank.bankName || ''} | IBAN: ${bank.iban || ''} | BIC: ${bank.bic || ''} | ${company.taxNumber || ''}`;
+            }
+        }
+
+        // Invoice Management
+        function updateInvoicesList() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const companyFilter = document.getElementById('company-filter').value;
+            const dateFrom = document.getElementById('date-from').value;
+            const dateTo = document.getElementById('date-to').value;
+            const sortFilter = document.getElementById('sort-filter').value;
+            
+            // Filter invoices
+            filteredInvoices = (crmData.invoices || []).filter(invoice => {
+                const company = crmData.companies?.find(c => c.id === invoice.companyId);
+                const companyName = company ? company.name.toLowerCase() : '';
+                
+                const matchesSearch = !searchTerm || 
+                    invoice.invoiceNumber.toLowerCase().includes(searchTerm) ||
+                    companyName.includes(searchTerm) ||
+                    (invoice.notes && invoice.notes.toLowerCase().includes(searchTerm));
+                
+                const matchesStatus = !statusFilter || invoice.status === statusFilter;
+                const matchesCompany = !companyFilter || invoice.companyId.toString() === companyFilter;
+                
+                const invoiceDate = new Date(invoice.date);
+                const matchesDateFrom = !dateFrom || invoiceDate >= new Date(dateFrom);
+                const matchesDateTo = !dateTo || invoiceDate <= new Date(dateTo);
+                
+                return matchesSearch && matchesStatus && matchesCompany && matchesDateFrom && matchesDateTo;
+            });
+            
+            // Sort invoices
+            const [field, direction] = sortFilter.split('-');
+            filteredInvoices.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(field) {
+                    case 'date':
+                        aVal = new Date(a.date);
+                        bVal = new Date(b.date);
+                        break;
+                    case 'amount':
+                        aVal = parseFloat(a.totalGross) || 0;
+                        bVal = parseFloat(b.totalGross) || 0;
+                        break;
+                    case 'company':
+                        const companyA = crmData.companies?.find(c => c.id === a.companyId);
+                        const companyB = crmData.companies?.find(c => c.id === b.companyId);
+                        aVal = companyA ? companyA.name.toLowerCase() : '';
+                        bVal = companyB ? companyB.name.toLowerCase() : '';
+                        break;
+                    case 'status':
+                        aVal = a.status;
+                        bVal = b.status;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (direction === 'asc') {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                } else {
+                    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+                }
+            });
+            
+            renderInvoices();
+            updateStatistics();
+            updateCompanyFilter();
+        }
+
+        function renderInvoices() {
+            const container = document.getElementById('invoices-container');
+            
+            if (filteredInvoices.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💰</div>
+                        <h3 style="font-size: 18px; color: #6b7280; margin-bottom: 8px;">
+                            ${(crmData.invoices || []).length === 0 ? 'Keine Rechnungen vorhanden' : 'Keine Rechnungen gefunden'}
+                        </h3>
+                        <p style="color: #9ca3af; margin-bottom: 16px;">
+                            ${(crmData.invoices || []).length === 0 ? 
+                                'Erstelle deine erste Rechnung' : 
+                                'Versuche andere Suchbegriffe oder Filter'}
+                        </p>
+                        ${(crmData.invoices || []).length === 0 ? `
+                            <button class="button" onclick="createNewInvoice()">
+                                Erste Rechnung erstellen
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredInvoices.map(invoice => {
+                const company = crmData.companies?.find(c => c.id === invoice.companyId);
+                const contact = company && invoice.contactId ? 
+                    company.contacts?.find(c => c.id === invoice.contactId) : null;
+                
+                const dueDate = new Date(invoice.dueDate);
+                const isOverdue = invoice.status === 'sent' && dueDate < new Date();
+                
+                return `
+                    <div class="invoice-card" onclick="showInvoiceDetail(${invoice.id})">
+                        <div class="invoice-header">
+                            <div>
+                                <div class="invoice-number">${invoice.invoiceNumber}</div>
+                                <div class="invoice-company">${company ? company.name : 'Unbekanntes Unternehmen'}</div>
+                                ${contact ? `<div class="invoice-contact">${contact.name}</div>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="invoice-amount">${formatCurrency(parseFloat(invoice.totalGross))}</div>
+                                <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
+                                    ${formatCurrency(parseFloat(invoice.totalNet))} netto
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="invoice-meta">
+                            <span class="status-badge status-${isOverdue ? 'overdue' : invoice.status}">
+                                ${getStatusLabel(isOverdue ? 'overdue' : invoice.status)}
+                            </span>
+                            
+                            <div class="invoice-date">
+                                Datum: ${formatDate(invoice.date)}
+                            </div>
+                            
+                            <div class="invoice-date">
+                                Fällig: ${formatDate(invoice.dueDate)}
+                            </div>
+                            
+                            <div style="margin-left: auto; font-size: 12px; color: #9ca3af;">
+                                ${invoice.items.length} Position${invoice.items.length !== 1 ? 'en' : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="invoice-actions" onclick="event.stopPropagation();">
+                            <button class="icon-button" onclick="editInvoice(${invoice.id})" title="Bearbeiten">
+                                ✏️
+                            </button>
+                            <button class="icon-button" onclick="duplicateInvoice(${invoice.id})" title="Duplizieren">
+                                📋
+                            </button>
+                            <button class="icon-button" onclick="downloadInvoicePDFDirect(${invoice.id})" title="PDF herunterladen">
+                                📄
+                            </button>
+                            <button class="icon-button delete" onclick="deleteInvoice(${invoice.id})" title="Löschen">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function downloadInvoicePDFDirect(invoiceId) {
+            const invoice = (crmData.invoices || []).find(i => i.id === invoiceId);
+            if (!invoice) {
+                showErrorMessage('Rechnung nicht gefunden!');
+                return;
+            }
+            
+            if (generateInvoicePDF(invoice)) {
+                showSuccessMessage('✅ PDF erfolgreich erstellt und heruntergeladen!');
+            } else {
+                showErrorMessage('❌ Fehler beim Erstellen der PDF. Bitte versuchen Sie es erneut.');
+            }
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'draft': 'Entwurf',
+                'sent': 'Versendet',
+                'paid': 'Bezahlt',
+                'overdue': 'Überfällig',
+                'cancelled': 'Storniert'
+            };
+            return labels[status] || status;
+        }
+
+        function updateStatistics() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const invoices = crmData.invoices || [];
+            const openInvoices = invoices.filter(i => ['sent', 'overdue'].includes(i.status));
+            const overdueInvoices = invoices.filter(i => {
+                return i.status === 'sent' && new Date(i.dueDate) < now;
+            });
+            
+            const paidThisMonth = invoices.filter(i => {
+                const invoiceDate = new Date(i.date);
+                return i.status === 'paid' && 
+                       invoiceDate.getMonth() === currentMonth && 
+                       invoiceDate.getFullYear() === currentYear;
+            });
+            
+            const paidThisYear = invoices.filter(i => {
+                const invoiceDate = new Date(i.date);
+                return i.status === 'paid' && invoiceDate.getFullYear() === currentYear;
+            });
+            
+            const monthlyRevenue = paidThisMonth.reduce((sum, inv) => sum + parseFloat(inv.totalGross || 0), 0);
+            const yearlyRevenue = paidThisYear.reduce((sum, inv) => sum + parseFloat(inv.totalGross || 0), 0);
+            
+            document.getElementById('open-invoices-count').textContent = openInvoices.length;
+            document.getElementById('overdue-invoices-count').textContent = overdueInvoices.length;
+            document.getElementById('monthly-revenue').textContent = formatCurrency(monthlyRevenue);
+            document.getElementById('yearly-revenue').textContent = formatCurrency(yearlyRevenue);
+        }
+
+        function updateCompanyFilter() {
+            const companyFilter = document.getElementById('company-filter');
+            const currentValue = companyFilter.value;
+            
+            companyFilter.innerHTML = '<option value="">Alle Unternehmen</option>' +
+                (crmData.companies || []).map(company => 
+                    `<option value="${company.id}">${company.name}</option>`
+                ).join('');
+            
+            companyFilter.value = currentValue;
+        }
+
+        function showInvoiceDetail(invoiceId) {
+            selectedInvoice = (crmData.invoices || []).find(i => i.id === invoiceId);
+            if (!selectedInvoice) return;
+            
+            const company = crmData.companies?.find(c => c.id === selectedInvoice.companyId);
+            const contact = company && selectedInvoice.contactId ? 
+                company.contacts?.find(c => c.id === selectedInvoice.contactId) : null;
+            
+            document.getElementById('invoice-detail-title').textContent = 
+                `Rechnung ${selectedInvoice.invoiceNumber}`;
+            
+            const content = document.getElementById('invoice-detail-content');
+            content.innerHTML = `
+                <div class="invoice-detail">
+                    <div class="detail-row">
+                        <span class="detail-label">Rechnungsnummer:</span>
+                        <span class="detail-value">${selectedInvoice.invoiceNumber}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="status-badge status-${selectedInvoice.status}">
+                            ${getStatusLabel(selectedInvoice.status)}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Kunde:</span>
+                        <span class="detail-value">${company ? company.name : 'Unbekannt'}</span>
+                    </div>
+                    ${contact ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Ansprechpartner:</span>
+                            <span class="detail-value">${contact.name} (${contact.position || 'Position nicht angegeben'})</span>
+                        </div>
+                    ` : ''}
+                    <div class="detail-row">
+                        <span class="detail-label">Rechnungsdatum:</span>
+                        <span class="detail-value">${formatDate(selectedInvoice.date)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Fälligkeitsdatum:</span>
+                        <span class="detail-value">${formatDate(selectedInvoice.dueDate)}</span>
+                    </div>
+                </div>
+                
+                <div class="invoice-detail">
+                    <h4 style="margin-bottom: 12px;">Rechnungspositionen</h4>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Menge</th>
+                                <th>Einzelpreis</th>
+                                <th>Gesamt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${selectedInvoice.items.map(item => `
+                                <tr>
+                                    <td>
+                                        <strong>${item.productName}</strong>
+                                        ${item.description ? `<br><small style="color: #6b7280;">${item.description}</small>` : ''}
+                                    </td>
+                                    <td>${item.quantity} ${item.unit}</td>
+                                    <td>${formatCurrency(parseFloat(item.unitPrice))}</td>
+                                    <td>${formatCurrency(parseFloat(item.totalPrice))}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3"><strong>Netto-Summe:</strong></td>
+                                <td class="total-row">${formatCurrency(parseFloat(selectedInvoice.totalNet))}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>MwSt (${selectedInvoice.vatRate}%):</strong></td>
+                                <td class="total-row">${formatCurrency(parseFloat(selectedInvoice.totalVat))}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>Gesamt-Summe:</strong></td>
+                                <td class="total-row">${formatCurrency(parseFloat(selectedInvoice.totalGross))}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                ${selectedInvoice.notes ? `
+                    <div class="invoice-detail">
+                        <h4 style="margin-bottom: 8px;">Notizen</h4>
+                        <p style="color: #6b7280; white-space: pre-wrap;">${selectedInvoice.notes}</p>
+                    </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('invoice-detail-modal').classList.remove('hidden');
+        }
+
+        function hideInvoiceDetailModal() {
+            document.getElementById('invoice-detail-modal').classList.add('hidden');
+            selectedInvoice = null;
+        }
+
+        function createNewInvoice() {
+            navigateToPage('create-invoice');
+        }
+
+        function editInvoice(invoiceId) {
+            if (invoiceId) {
+                ipcRenderer.send('set-edit-invoice-id', invoiceId);
+                navigateToPage('create-invoice');
+            } else if (selectedInvoice) {
+                ipcRenderer.send('set-edit-invoice-id', selectedInvoice.id);
+                navigateToPage('create-invoice');
+            }
+        }
+
+        async function duplicateInvoice(invoiceId) {
+            const invoice = (crmData.invoices || []).find(i => i.id === invoiceId);
+            if (!invoice) return;
+            
+            if (confirm(`Möchten Sie die Rechnung "${invoice.invoiceNumber}" duplizieren?`)) {
+                try {
+                    const newInvoice = {
+                        ...invoice,
+                        id: Date.now(),
+                        invoiceNumber: await generateNextInvoiceNumber(),
+                        status: 'draft',
+                        date: new Date().toISOString().split('T')[0],
+                        dueDate: new Date(Date.now() + ((crmData.invoiceSettings?.defaultPaymentTerms || 30) * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    crmData.invoices = crmData.invoices || [];
+                    crmData.invoices.push(newInvoice);
+                    crmData.invoiceSettings = crmData.invoiceSettings || {};
+                    crmData.invoiceSettings.nextInvoiceNumber = (crmData.invoiceSettings.nextInvoiceNumber || 1) + 1;
+                    
+                    await saveCRMData();
+                    updateInvoicesList();
+                    showSuccessMessage('✅ Rechnung erfolgreich dupliziert!');
+                } catch (error) {
+                    showErrorMessage('Fehler beim Duplizieren der Rechnung: ' + error.message);
+                }
+            }
+        }
+
+        async function generateNextInvoiceNumber() {
+            const settings = crmData.invoiceSettings || {};
+            const number = settings.nextInvoiceNumber || 1;
+            const padding = settings.invoiceNumberPadding || 4;
+            const paddedNumber = padding > 0 ? number.toString().padStart(padding, '0') : number.toString();
+            return (settings.invoiceNumberPrefix || 'R-') + paddedNumber;
+        }
+
+        function downloadInvoicePDF() {
+            if (!selectedInvoice) return;
+            
+            if (generateInvoicePDF(selectedInvoice)) {
+                showSuccessMessage('✅ PDF erfolgreich erstellt und heruntergeladen!');
+            } else {
+                showErrorMessage('❌ Fehler beim Erstellen der PDF. Bitte versuchen Sie es erneut.');
+            }
+        }
+
+        async function deleteInvoice(invoiceId) {
+            const invoice = (crmData.invoices || []).find(i => i.id === invoiceId);
+            if (!invoice) return;
+            
+            if (confirm(`Möchten Sie die Rechnung "${invoice.invoiceNumber}" wirklich löschen?`)) {
+                try {
+                    crmData.invoices = (crmData.invoices || []).filter(i => i.id !== invoiceId);
+                    await saveCRMData();
+                    updateInvoicesList();
+                    
+                    if (selectedInvoice && selectedInvoice.id === invoiceId) {
+                        hideInvoiceDetailModal();
+                    }
+                    
+                    showSuccessMessage('✅ Rechnung erfolgreich gelöscht!');
+                } catch (error) {
+                    showErrorMessage('Fehler beim Löschen der Rechnung: ' + error.message);
+                }
+            }
+        }
+
+        async function updateReminderCount() {
+            try {
+                const reminders = crmData.reminders || [];
+                const activeReminders = reminders.filter(r => !r.completed).length;
+                document.getElementById('reminder-count').textContent = activeReminders;
+            } catch (error) {
+                console.error('Error updating reminder count:', error);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('search-input').addEventListener('input', updateInvoicesList);
+        document.getElementById('status-filter').addEventListener('change', updateInvoicesList);
+        document.getElementById('company-filter').addEventListener('change', updateInvoicesList);
+        document.getElementById('date-from').addEventListener('change', updateInvoicesList);
+        document.getElementById('date-to').addEventListener('change', updateInvoicesList);
+        document.getElementById('sort-filter').addEventListener('change', updateInvoicesList);
+
+        // Initialize
+        async function initialize() {
+            try {
+                await loadCRMData();
+                await updateReminderCount();
+                updateInvoicesList();
+            } catch (error) {
+                console.error('Error initializing invoices page:', error);
+                showErrorMessage('Fehler beim Initialisieren der Seite: ' + error.message);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('invoice-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) hideInvoiceDetailModal();
+        });
+
+        // Start initialization when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
